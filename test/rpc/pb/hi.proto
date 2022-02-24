@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "b-go-util/test/rpc";
+
+package test.rpc.hi;
+
+service Greeter {
+  rpc Hi (HiReq) returns (HiRsp) {}
+}
+
+service Waiter {
+  rpc Hi(HiReq)returns(HiRsp){}
+}
+
+message HiReq{
+  string name=1;
+}
+
+message HiRsp{
+  string msg=1;
+}

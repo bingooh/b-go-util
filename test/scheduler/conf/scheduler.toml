@@ -1,0 +1,19 @@
+EnableCronSeconds=true #是否启用秒定时设置
+
+[tasks.t1]
+Cron="*/1 * * * * ?"#任务触发时间，参考：https://github.com/robfig/cron
+EnableRecover=true#任务执行崩溃后是否恢复，默认为true
+SkipIfStillRunning=true#任务正在执行是否跳过本次触发。默认为true。如果设置为true，则DelayIfStillRunning设置无效
+DelayIfStillRunning=false#任务正在执行是否延迟本次触发
+
+[tasks.t2]
+Cron="*/2 * * * * ?" #每2秒
+EnableRecover=true
+SkipIfStillRunning=true
+DelayIfStillRunning=false
+
+[tasks.t5]
+Cron="@every 5s" #每5秒
+EnableRecover=true
+SkipIfStillRunning=true
+DelayIfStillRunning=false

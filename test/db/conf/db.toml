@@ -1,0 +1,25 @@
+[mysql]
+DSN = "root:111111@tcp(127.0.0.1:3306)/dev?charset=utf8mb4&parseTime=True&loc=Local&timeout=1m"
+
+[conn]
+MaxIdleConns = 2   #最大空闲连接数
+MaxOpenConns = 100 #最大打开连接数
+ConnMaxIdleTime = "2h" #连接最大空闲时间
+ConnMaxLifeTime = "0" #连接最大生存时间
+
+[log]
+LogLevel = 4 #日志级别：1-silent，2-error，3-warn，4-info
+SlowThreshold = "5ms" #慢SQL耗时临界值
+IgnoreRecordNotFoundError = false #是否不输出查询结果为空错误日志
+
+[NamingStrategy]
+TablePrefix = "t_"  #表名前缀
+SingularTable = true #是否使用单数表名，默认使用复数
+
+[gorm]
+DryRun = false # 是否只生成SQL但不执行
+SkipDefaultTransaction = true #是否执行单条CUD语句时不单独启用1个事务
+PrepareStmt = true #启用预编译SQL语句
+
+
+

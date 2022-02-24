@@ -1,0 +1,21 @@
+[client]
+HostURL = "http://localhost:9999" #服务端URL
+
+[server]
+GinMode = "release" #默认为gin.DebugMode
+ListenAddress = "localhost:9999"
+
+[session]
+CookieName = "testsession"
+CookieKeys = ["111111"] #cookie加密密钥，需设置1个或偶数个，建议使用16/32/64字符
+
+[session.cookie]
+MaxAge = 600 #session ttl(秒数)
+HttpOnly = true
+Path = "/"
+
+[session.RedisStore] #可选，默认使用CookieStore
+Addr = "localhost:6379" #redis地址
+Password = "" #redis密码
+DB = 3 #redis数据库
+Prefix = "session:" #session键名称前缀，默认为session
