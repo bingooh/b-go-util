@@ -1,8 +1,8 @@
 package rdb
 
 import (
-	"b-go-util/rdb"
 	"context"
+	"github.com/bingooh/b-go-util/rdb"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/require"
 	"testing"

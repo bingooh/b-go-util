@@ -1,9 +1,9 @@
 package rdb
 
 import (
-	"b-go-util/async"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/async"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/bsm/redislock"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"

@@ -1,9 +1,9 @@
 package db
 
 import (
-	"b-go-util/orm"
 	"database/sql"
 	"fmt"
+	"github.com/bingooh/b-go-util/orm"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

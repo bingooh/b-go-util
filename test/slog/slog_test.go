@@ -1,8 +1,8 @@
 package slog
 
 import (
-	"b-go-util/slog"
 	"errors"
+	"github.com/bingooh/b-go-util/slog"
 	"go.uber.org/zap"
 	"testing"
 )

@@ -1,10 +1,10 @@
 package rdb
 
 import (
-	"b-go-util/_string"
-	"b-go-util/slog"
 	"bytes"
 	"encoding/json"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/slog"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )

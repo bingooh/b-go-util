@@ -1,10 +1,10 @@
 package bolt
 
 import (
-	"b-go-util/_string"
-	ubolt "b-go-util/bolt"
 	"encoding/json"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
+	ubolt "github.com/bingooh/b-go-util/bolt"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 	"strconv"

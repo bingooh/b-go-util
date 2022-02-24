@@ -1,11 +1,11 @@
 package orm
 
 import (
-	"b-go-util/_interface"
-	"b-go-util/_string"
-	"b-go-util/slog"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/_interface"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/slog"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

@@ -1,9 +1,9 @@
 package rpc
 
 import (
-	"b-go-util/rpc"
-	"b-go-util/test/rpc/pb"
 	"context"
+	"github.com/bingooh/b-go-util/rpc"
+	"github.com/bingooh/b-go-util/test/rpc/pb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

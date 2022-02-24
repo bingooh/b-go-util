@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "b-go-util/test/rpc";
+option go_package = "github.com/bingooh/b-go-util/test/rpc/pb";
 
 package test.rpc.hi;
 

@@ -1,11 +1,11 @@
 package db
 
 import (
-	"b-go-util/_interface"
-	"b-go-util/orm"
-	"b-go-util/util"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/_interface"
+	"github.com/bingooh/b-go-util/orm"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"testing"

@@ -1,8 +1,8 @@
 package http
 
 import (
-	"b-go-util/_string"
-	"b-go-util/util"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/sessions/redis"

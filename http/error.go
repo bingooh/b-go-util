@@ -1,10 +1,10 @@
 package http
 
 import (
-	"b-go-util/util"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/util"
 	"net/http"
 )
 

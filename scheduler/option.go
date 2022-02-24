@@ -1,6 +1,6 @@
 package scheduler
 
-import "b-go-util/util"
+import "github.com/bingooh/b-go-util/util"
 
 type Option struct {
 	EnableCronSeconds bool                   //是否启用秒定时设置

@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"b-go-util/slog"
 	"fmt"
+	"github.com/bingooh/b-go-util/slog"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 	"strings"

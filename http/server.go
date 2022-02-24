@@ -1,9 +1,9 @@
 package http
 
 import (
-	"b-go-util/async"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/async"
+	"github.com/bingooh/b-go-util/util"
 	"go.uber.org/zap"
 	"net/http"
 	"time"

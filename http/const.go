@@ -1,5 +1,5 @@
 package http
 
 const (
-	KeySession string = `b-go-util/session`
+	KeySession string = `github.com/bingooh/b-go-util/session`
 )

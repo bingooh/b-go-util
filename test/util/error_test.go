@@ -1,9 +1,9 @@
 package util
 
 import (
-	"b-go-util/util"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

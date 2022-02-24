@@ -1,13 +1,13 @@
 package util
 
 import (
-	"b-go-util/_string"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
 	"io"
 	"strconv"
 	"strings"

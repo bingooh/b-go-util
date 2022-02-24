@@ -1,9 +1,9 @@
 package grpc
 
 import (
-	"b-go-util/util"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/util"
 	gopool "github.com/processout/grpc-go-pool"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"

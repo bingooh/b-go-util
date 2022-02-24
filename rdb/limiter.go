@@ -1,9 +1,9 @@
 package rdb
 
 import (
-	"b-go-util/_string"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/go-redis/redis/v8"
 	"time"
 )

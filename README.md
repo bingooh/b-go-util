@@ -1,4 +1,4 @@
-# b-go-util
+# github.com/bingooh/b-go-util
 Go常用工具库
 
 使用示例见目录`test`

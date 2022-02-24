@@ -1,4 +1,4 @@
-module b-go-util
+module github.com/bingooh/b-go-util
 
 go 1.14
 

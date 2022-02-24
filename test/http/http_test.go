@@ -1,11 +1,11 @@
 package http
 
 import (
-	"b-go-util/conf"
-	"b-go-util/http"
-	"b-go-util/util"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/conf"
+	"github.com/bingooh/b-go-util/http"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	validation "github.com/go-ozzo/ozzo-validation/v4"

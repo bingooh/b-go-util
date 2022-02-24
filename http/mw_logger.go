@@ -1,7 +1,7 @@
 package http
 
 import (
-	"b-go-util/slog"
+	"github.com/bingooh/b-go-util/slog"
 	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

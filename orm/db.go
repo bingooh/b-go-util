@@ -1,9 +1,9 @@
 package orm
 
 import (
-	"b-go-util/conf"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/conf"
+	"github.com/bingooh/b-go-util/util"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package slog
 
 import (
-	"b-go-util/conf"
 	"fmt"
+	"github.com/bingooh/b-go-util/conf"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"

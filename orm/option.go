@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"b-go-util/util"
+	"github.com/bingooh/b-go-util/util"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

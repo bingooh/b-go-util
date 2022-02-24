@@ -1,8 +1,8 @@
 package async
 
 import (
-	"b-go-util/async"
-	"b-go-util/util"
+	"github.com/bingooh/b-go-util/async"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"strconv"
 	"sync"

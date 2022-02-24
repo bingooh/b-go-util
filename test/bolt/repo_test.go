@@ -1,9 +1,9 @@
 package bolt
 
 import (
-	ubolt "b-go-util/bolt"
 	"bytes"
 	"fmt"
+	ubolt "github.com/bingooh/b-go-util/bolt"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 	"os"

@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"b-go-util/scheduler"
-	"b-go-util/util"
+	"github.com/bingooh/b-go-util/scheduler"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

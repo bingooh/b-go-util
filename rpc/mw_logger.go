@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"b-go-util/slog"
 	"context"
+	"github.com/bingooh/b-go-util/slog"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

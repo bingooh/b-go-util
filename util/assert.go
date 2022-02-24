@@ -1,6 +1,6 @@
 package util
 
-import "b-go-util/_string"
+import "github.com/bingooh/b-go-util/_string"
 
 func AssertNilErr(err error, args ...interface{}) {
 	if err == nil {

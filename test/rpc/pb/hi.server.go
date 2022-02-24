@@ -1,9 +1,9 @@
 package pb
 
 import (
-	"b-go-util/_string"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

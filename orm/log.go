@@ -1,10 +1,10 @@
 package orm
 
 import (
-	"b-go-util/slog"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/slog"
 	"go.uber.org/zap"
 	glog "gorm.io/gorm/logger"
 	"log"
@@ -112,7 +112,7 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (sql strin
 //需要跳过的日志调用者路径
 const (
 	gormPkg = `gorm.io/gorm`
-	bormPkg = `b-go-util/orm`
+	bormPkg = `github.com/bingooh/b-go-util/orm`
 )
 
 func (l Logger) loggerWithSkippedCaller() *zap.Logger {

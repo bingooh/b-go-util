@@ -1,9 +1,9 @@
 package async
 
 import (
-	"b-go-util/async"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/async"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

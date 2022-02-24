@@ -1,9 +1,9 @@
 package bolt
 
 import (
-	"b-go-util/_string"
-	"b-go-util/util"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/util"
 	bolt "go.etcd.io/bbolt"
 	"os"
 	"path/filepath"

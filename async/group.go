@@ -1,8 +1,8 @@
 package async
 
 import (
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/util"
 	"sync"
 	"time"
 )

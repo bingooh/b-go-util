@@ -1,9 +1,9 @@
 package scheduler
 
 import (
-	"b-go-util/conf"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/conf"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 	"sync"

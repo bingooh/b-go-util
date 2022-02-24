@@ -1,8 +1,8 @@
 package conf
 
 import (
-	"b-go-util/_string"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"

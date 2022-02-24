@@ -1,10 +1,10 @@
 package rpc
 
 import (
-	"b-go-util/async"
-	"b-go-util/slog"
-	"b-go-util/util"
 	"context"
+	"github.com/bingooh/b-go-util/async"
+	"github.com/bingooh/b-go-util/slog"
+	"github.com/bingooh/b-go-util/util"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

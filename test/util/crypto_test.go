@@ -1,8 +1,8 @@
 package util
 
 import (
-	"b-go-util/util"
 	"fmt"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"

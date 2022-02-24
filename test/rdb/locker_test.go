@@ -1,9 +1,9 @@
 package rdb
 
 import (
-	"b-go-util/rdb"
 	"context"
 	"fmt"
+	"github.com/bingooh/b-go-util/rdb"
 	"github.com/bsm/redislock"
 	"github.com/stretchr/testify/require"
 	"sync"

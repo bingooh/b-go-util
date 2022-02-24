@@ -1,11 +1,11 @@
 package rpc
 
 import (
-	"b-go-util/_string"
-	"b-go-util/util"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bingooh/b-go-util/_string"
+	"github.com/bingooh/b-go-util/util"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

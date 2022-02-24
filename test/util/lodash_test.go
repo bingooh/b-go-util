@@ -1,7 +1,7 @@
 package util
 
 import (
-	"b-go-util/_interface"
+	"github.com/bingooh/b-go-util/_interface"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
