@@ -1,6 +1,6 @@
 module github.com/bingooh/b-go-util
 
-go 1.14
+go 1.18
 
 require (
 	github.com/bsm/redislock v0.7.1
