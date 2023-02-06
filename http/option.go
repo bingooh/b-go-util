@@ -23,7 +23,7 @@ func (o *ServerOption) MustNormalize() *ServerOption {
 	return o
 }
 
-//重置Gin全局配置
+// 重置Gin全局配置
 func (o *ServerOption) ResetGinGlobalCfg() {
 	gin.SetMode(o.GinMode)
 }

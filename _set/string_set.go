@@ -1,4 +1,4 @@
-package util
+package _set
 
 import "fmt"
 
@@ -32,6 +32,56 @@ func (h *StringSet) Empty() bool {
 func (h *StringSet) Contains(item string) bool {
 	_, ok := h.m[item]
 	return ok
+}
+
+func (h *StringSet) ContainsAll(items ...string) bool {
+	for _, item := range items {
+		if _, ok := h.m[item]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (h *StringSet) ContainsSet(other *StringSet) bool {
+	if other == nil || other.Size() == 0 {
+		return true
+	}
+
+	for k, _ := range other.m {
+		if _, ok := h.m[k]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (h *StringSet) Equal(other *StringSet) bool {
+	if h.Size() != other.Size() {
+		return false
+	}
+
+	if h.Empty() && other.Empty() {
+		return true
+	}
+
+	for k, _ := range h.m {
+		if _, ok := other.m[k]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (h *StringSet) ForEach(fn func(item string) bool) {
+	for k, _ := range h.m {
+		if !fn(k) {
+			return
+		}
+	}
 }
 
 func (h *StringSet) Add(item string) {
@@ -68,6 +118,32 @@ func (h *StringSet) Clone() *StringSet {
 
 	for k, v := range h.m {
 		m[k] = v
+	}
+
+	return &StringSet{m: m}
+}
+
+func (h *StringSet) Pop(n int) *StringSet {
+	if n < 1 {
+		return NewStringSet()
+	}
+
+	if h.Size() <= n {
+		s := &StringSet{m: h.m}
+		h.m = make(map[string]struct{})
+		return s
+	}
+
+	i := 0
+	m := make(map[string]struct{}, n)
+	for k, v := range h.m {
+		m[k] = v
+		delete(h.m, k)
+
+		i++
+		if i == n {
+			break
+		}
 	}
 
 	return &StringSet{m: m}
@@ -111,6 +187,21 @@ func (h *StringSet) Diff(other *StringSet) *StringSet {
 	}
 
 	return h
+}
+
+func (h *StringSet) NewDiff(other *StringSet) *StringSet {
+	if other == nil || len(other.m) == 0 {
+		return h.Clone()
+	}
+
+	s := NewStringSet()
+	for k, _ := range h.m {
+		if _, ok := other.m[k]; !ok {
+			s.Add(k)
+		}
+	}
+
+	return s
 }
 
 // 交集

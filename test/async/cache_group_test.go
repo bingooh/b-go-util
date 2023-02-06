@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//创建获取缓存值任务，任务沉睡1秒后返回val作为缓存值，同时count++
+// 创建获取缓存值任务，任务沉睡1秒后返回val作为缓存值，同时count++
 func newFetchCacheTask(val string, count *util.AtomicInt64) async.Task {
 	return async.ToValTask(func() (interface{}, error) {
 		time.Sleep(1 * time.Second)
@@ -58,17 +58,17 @@ func TestCacheGroupDo(t *testing.T) {
 	require.WithinDuration(t, time.Now(), start.Add(1*time.Second), 1*time.Second)
 }
 
-func TestCacheGroupRemove(t *testing.T) {
+func TestCacheGroupDel(t *testing.T) {
+	key := "1"
 	g := async.NewCacheGroup()
 
-	key := "1"
 	result := g.Do(key, newFetchCacheTask(key, nil))
 	require.Equal(t, key, result.MustString())
 
 	result = g.Get(key) //获取现有缓存值，如无返回nil
 	require.Equal(t, key, result.MustString())
 
-	result = g.Remove(key) //删除缓存值，返回被删除的值
+	result = g.Del(key) //删除缓存值，返回被删除的值
 	require.Equal(t, key, result.MustString())
 
 	result = g.Get(key)
@@ -107,17 +107,51 @@ func TestCacheGroupRemove(t *testing.T) {
 		time.Sleep(1 * time.Second) //等待c2调用group.Get()后删除缓存值
 		c3Wg.Done()
 
-		result := g.Remove(key)
+		result := g.Del(key)
 		require.Nil(t, result) //不能获取缓存值，c1还未执行完任务
 	})
 
 	c4 := async.Run(func() {
 		c3Wg.Wait()
-		time.Sleep(3 * time.Second) //等待c3调用group.Remove()后且c1执行完任务后再获取缓存值
+		time.Sleep(3 * time.Second) //等待c3调用group.Del()后且c1执行完任务后再获取缓存值
 
 		result := g.Get(key)
 		require.Nil(t, result) //不能获取缓存值，c3已将缓存删除
 	})
 
 	_, _, _, _ = <-c1, <-c2, <-c3, <-c4
+}
+
+func TestCacheGroupDelMulti(t *testing.T) {
+	r := require.New(t)
+
+	key := `1`
+	count := util.NewAtomicInt64(0)
+	g := async.NewCacheGroup()
+
+	doGet := func() {
+		wg := async.NewWaitGroup()
+		for i := 0; i < 10; i++ {
+			wg.Run(func() {
+				//回调函数执行期间后续进入的请求都将等待获取结果
+				val := g.Do(key, async.ToValTask(func() (interface{}, error) {
+					time.Sleep(1 * time.Second)
+					count.Incr(1)
+					r.Nil(g.Del(key)) //移除缓存
+					return key, nil
+				})).MustString()
+
+				r.Equal(key, val)
+			})
+		}
+		wg.Wait()
+	}
+
+	doGet()
+	r.EqualValues(1, count.Value())
+	r.Nil(g.Get(key))
+
+	doGet()
+	r.EqualValues(2, count.Value())
+	r.Nil(g.Get(key))
 }

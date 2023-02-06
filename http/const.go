@@ -1,5 +1,7 @@
 package http
 
+var UserAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36`
+
 const (
-	KeySession string = `github.com/bingooh/b-go-util/session`
+	KeySession string = `b-go-util/session`
 )

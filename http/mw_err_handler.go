@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/bingooh/b-go-util/_string"
 	"github.com/bingooh/b-go-util/util"
 	"github.com/gin-gonic/gin"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -12,25 +11,24 @@ import (
 	"strconv"
 )
 
-type MWErrorHandler struct {
-	logger                           *zap.Logger
-	toHttpErrHook                    MWErrorHandlerToHttpErrHook
-	sendRspHook                      MWErrorHandlerSendRspHook
-	rspErrField                      string //错误对象对应的响应字段名称
-	enableLog400Err                  bool   //是否输出400错误的日志，默认false
-	enableParseHttpStatusFromErrCode bool   //是否从错误码里解析http响应状态码，默认true。注意：仅解析至少为4位数的错误码
-}
-
-//回调函数，解析错误对象为http.Error
+// MWErrorHandlerToHttpErrHook 回调函数，解析错误对象为http.Error
 type MWErrorHandlerToHttpErrHook func(ctx *gin.Context, handler *MWErrorHandler) *Error
 
-//回调函数，发送错误响应
+// MWErrorHandlerSendRspHook 回调函数，发送错误响应
 type MWErrorHandlerSendRspHook func(ctx *gin.Context, handler *MWErrorHandler, err *Error)
+
+type MWErrorHandler struct {
+	logger                            *zap.Logger
+	toHttpErrHook                     MWErrorHandlerToHttpErrHook
+	sendRspHook                       MWErrorHandlerSendRspHook
+	rspErrField                       string //错误对象对应的响应字段名称
+	enableLog400Err                   bool   //是否输出400错误的日志
+	disableParseHttpStatusFromErrCode bool   //是否从错误码里抽取前3位作为http响应状态码。注意：仅解析至少为4位数的错误码
+}
 
 func NewMWErrorHandler() *MWErrorHandler {
 	return &MWErrorHandler{
-		logger:                           newLogger(`MWErrorHandler`),
-		enableParseHttpStatusFromErrCode: true,
+		logger: newLogger(`MWErrorHandler`),
 	}
 }
 
@@ -39,8 +37,8 @@ func (h *MWErrorHandler) EnableLog400Err(enable bool) *MWErrorHandler {
 	return h
 }
 
-func (h *MWErrorHandler) EnableParseHttpStatusFromErrCode(enable bool) *MWErrorHandler {
-	h.enableParseHttpStatusFromErrCode = enable
+func (h *MWErrorHandler) DisableParseHttpStatusFromErrCode(disable bool) *MWErrorHandler {
+	h.disableParseHttpStatusFromErrCode = disable
 	return h
 }
 
@@ -82,7 +80,7 @@ func (h *MWErrorHandler) sendErrRsp(c *gin.Context, httpErr *Error, isPanicErr b
 		return
 	}
 
-	if _string.Empty(h.rspErrField) {
+	if len(h.rspErrField) == 0 {
 		c.JSON(httpErr.status, httpErr)
 		return
 	}
@@ -90,7 +88,7 @@ func (h *MWErrorHandler) sendErrRsp(c *gin.Context, httpErr *Error, isPanicErr b
 	c.JSON(httpErr.status, gin.H{h.rspErrField: httpErr})
 }
 
-//处理请求
+// 处理请求
 func (h *MWErrorHandler) Handle(c *gin.Context) {
 	defer util.OnExit(func(err error) {
 		if err != nil {
@@ -107,7 +105,7 @@ func (h *MWErrorHandler) Handle(c *gin.Context) {
 	c.Next()
 }
 
-//是否为验证错误
+// 是否为验证错误
 func (h *MWErrorHandler) IsValidationErr(err error) bool {
 	if e, ok := err.(*gin.Error); ok {
 		if e.Type == gin.ErrorTypeBind {
@@ -127,20 +125,15 @@ func (h *MWErrorHandler) IsValidationErr(err error) bool {
 }
 
 func (h *MWErrorHandler) ToHttpErrCode(err error) int {
-	if e, ok := err.(*gin.Error); ok {
-		err = e.Err
-	}
-
-	if es, ok := err.(validation.Errors); ok && len(es) > 0 {
-		//只取第1个错误
-		for _, v := range es {
-			err = v
-			break
+	switch v := err.(type) {
+	case *gin.Error:
+		err = v.Err
+	case validation.Errors:
+		if len(v) > 0 {
+			err = v //只取第1个错误
 		}
-	}
-
-	if e, ok := err.(validation.Error); ok {
-		if code, ee := strconv.Atoi(e.Code()); ee == nil {
+	case validation.Error:
+		if code, ee := strconv.Atoi(v.Code()); ee == nil {
 			return code
 		}
 	}
@@ -148,9 +141,9 @@ func (h *MWErrorHandler) ToHttpErrCode(err error) int {
 	return util.GetBizErrCode(err)
 }
 
-func (h *MWErrorHandler) toHttpErrStatus(code int) int {
-	if !h.enableParseHttpStatusFromErrCode || code <= 999 {
-		return util.ToHttpStatus(code)
+func (h *MWErrorHandler) ToHttpErrStatus(code int) int {
+	if code < 1000 || h.disableParseHttpStatusFromErrCode {
+		return util.ToHttpStatus(code, http.StatusInternalServerError)
 	}
 
 	v := strconv.Itoa(code)[:3]
@@ -177,5 +170,5 @@ func (h *MWErrorHandler) ToHttpErr(c *gin.Context) *Error {
 		return New400Error(code, err.Error())
 	}
 
-	return NewError(h.toHttpErrStatus(code), code, err.Error())
+	return NewError(h.ToHttpErrStatus(code), code, err.Error())
 }

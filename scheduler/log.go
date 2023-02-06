@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//创建用于输出db日志的日志器，默认读取conf/log_db配置文件，如无则调用slog.NewLogger()
+// 创建用于输出db日志的日志器，默认读取conf/log_db配置文件，如无则调用slog.NewLogger()
 func newSchedulerZapLogger() *zap.Logger {
 	if logger, err := slog.NewLoggerFromCfgFile(`log_scheduler`); err == nil {
 		return logger.With(slog.NewTagField(`scheduler`))

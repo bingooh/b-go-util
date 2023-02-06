@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-//循环执行任务直到取消
+// 循环执行任务直到取消
 func DoUntilCancel(ctx context.Context, task func(c Context)) {
-	c := NewCtx(ctx)
+	c := NewContext(ctx)
 	for {
 		c.(*BaseCtx).incrCount()
 
@@ -25,25 +25,25 @@ func DoUntilCancel(ctx context.Context, task func(c Context)) {
 	}
 }
 
-//循环执行任务直到超时
+// 循环执行任务直到超时
 func DoUntilTimeout(timeout time.Duration, task func(c Context)) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	DoUntilCancel(ctx, task)
 }
 
-//执行可取消任务
+// 执行可取消任务
 func DoCancelableTask(ctx context.Context, task func()) Context {
-	c := NewCtx(ctx)
+	c := NewContext(ctx)
 	select {
 	case <-ctx.Done():
 		return c
-	case <-run(nil, task):
+	case <-Run(task):
 		return newFreezeCtx(c, false)
 	}
 }
 
-//执行可超时任务
+// 执行可超时任务
 func DoTimeLimitTask(timeout time.Duration, task func()) Context {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer time.AfterFunc(1*time.Nanosecond, cancel)

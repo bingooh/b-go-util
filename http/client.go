@@ -7,12 +7,14 @@ import (
 )
 
 type ClientOption struct {
-	HostURL         string //服务端URL
-	Debug           bool   //是否启用调试模式
-	AuthToken       string //验证token
-	AuthScheme      string //验证方式，默认bearer
-	BasicAuthName   string //basic验证用户名
-	BasicAuthPasswd string //basic验证密码
+	HostURL             string //服务端URL
+	Debug               bool   //是否启用调试模式
+	AuthToken           string //验证token
+	AuthScheme          string //验证方式，默认bearer
+	BasicAuthName       string //basic验证用户名
+	BasicAuthPasswd     string //basic验证密码
+	UserAgent           string //user agent
+	UseDefaultUserAgent bool   //是否设置默认user agent
 }
 
 func (o *ClientOption) MustNormalize() *ClientOption {
@@ -21,13 +23,15 @@ func (o *ClientOption) MustNormalize() *ClientOption {
 	return o
 }
 
+func NewClient(hostURL string, debug bool) *resty.Client {
+	return resty.New().
+		SetLogger(newLogger(`client`).Sugar()).
+		SetDebug(debug).SetHostURL(hostURL)
+}
+
 func MustNewClient(option *ClientOption) *resty.Client {
 	o := option.MustNormalize()
-
-	c := resty.New().
-		SetLogger(newLogger(`client`).Sugar()).
-		SetDebug(o.Debug).
-		SetHostURL(o.HostURL)
+	c := NewClient(o.HostURL, o.Debug)
 
 	if !_string.Empty(o.BasicAuthName) {
 		c.SetBasicAuth(o.BasicAuthName, o.BasicAuthPasswd)
@@ -39,6 +43,12 @@ func MustNewClient(option *ClientOption) *resty.Client {
 
 	if !_string.Empty(o.AuthScheme) {
 		c.SetAuthScheme(o.AuthScheme)
+	}
+
+	if !_string.Empty(o.UserAgent) {
+		c.SetHeader(`User-Agent`, o.UserAgent)
+	} else if o.UseDefaultUserAgent {
+		c.SetHeader(`User-Agent`, UserAgent)
 	}
 
 	return c

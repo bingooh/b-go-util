@@ -6,7 +6,13 @@ import (
 	"net/http"
 )
 
-//错误码，建议自定义业务错误码使用6位数，前3位可表示http响应状态码
+var (
+	ErrBreak    = errors.New(`break`)
+	ErrContinue = errors.New(`continue`)
+	ErrReturn   = errors.New(`return`)
+)
+
+// 错误码，建议自定义业务错误码使用6位数，前3位可表示http响应状态码
 const (
 	ErrCodeUnknown      int = -1
 	ErrCodeOK           int = 0
@@ -16,16 +22,23 @@ const (
 	ErrCodeIllegalArg   int = 4
 	ErrCodeIllegalState int = 5
 	ErrCodeTypeCast     int = 6
-	ErrCodeForbidden    int = 7
-	ErrCodeTimeout      int = 8
-	ErrCodeTooOften     int = 9
-	ErrCodeLogout       int = 10
+	ErrCodeUnAuth       int = 7
+	ErrCodeForbidden    int = 8
+	ErrCodeTimeout      int = 9
+	ErrCodeTooOften     int = 10
+	ErrCodeCanceled     int = 11
+	ErrCodeAborted      int = 12
+	ErrCodeNotFound     int = 13
 	ErrCodeRedis        int = 100
 	ErrCodeDB           int = 200
 )
 
 func NewNilError(args ...interface{}) *BizError {
 	return NewBizError(ErrCodeNil, args...)
+}
+
+func NewNotFoundError(args ...interface{}) *BizError {
+	return NewBizError(ErrCodeNotFound, args...)
 }
 
 func NewAssertFailError(args ...interface{}) *BizError {
@@ -46,6 +59,10 @@ func NewIllegalStateError(args ...interface{}) *BizError {
 
 func NewTypeCastError(args ...interface{}) *BizError {
 	return NewBizError(ErrCodeTypeCast, args...)
+}
+
+func NewUnAuthError(args ...interface{}) *BizError {
+	return NewBizError(ErrCodeUnAuth, args...)
 }
 
 func NewForbiddenError(args ...interface{}) *BizError {
@@ -70,7 +87,7 @@ type BizError struct {
 	cause error
 }
 
-// args参数格式：err / format,args... / err,format,args...
+// NewBizError args参数格式：err / format,args... / err,format,args...
 func NewBizError(code int, args ...interface{}) *BizError {
 	var cause error
 	if n := len(args); n > 0 {
@@ -112,7 +129,7 @@ func (e *BizError) Unwrap() error {
 	return e.cause
 }
 
-//注：如果err为nil *BizError，则返回值nil,true
+// AsBizError 注：如果err为nil *BizError，则返回值nil,true
 func AsBizError(err error) (*BizError, bool) {
 	var e *BizError
 
@@ -161,27 +178,36 @@ func HasErrCode(err error, code int) bool {
 	return false
 }
 
-func HasErrCodeOK(err error) bool {
+func IsOKErr(err error) bool {
 	return HasErrCode(err, ErrCodeOK)
 }
 
-func HasErrCodeNil(err error) bool {
+func IsNilErr(err error) bool {
 	return HasErrCode(err, ErrCodeNil)
 }
 
-func ToHttpStatus(bizErrorCode int) int {
-	switch bizErrorCode {
-	case ErrCodeIllegalArg:
-		return http.StatusBadRequest
-	case ErrCodeLogout:
-		return http.StatusUnauthorized
-	case ErrCodeForbidden:
-		return http.StatusForbidden
-	case ErrCodeTooOften:
-		return http.StatusTooManyRequests
-	case ErrCodeOK:
-		return http.StatusOK
-	default:
-		return http.StatusInternalServerError
+func IsUnAuthErr(err error) bool {
+	return HasErrCode(err, ErrCodeUnAuth)
+}
+
+func IsForbiddenErr(err error) bool {
+	return HasErrCode(err, ErrCodeForbidden)
+}
+
+// http.StatusPreconditionFailed适用于http协议，用于服务端检查是否满足http头请求参数。不适合业务错误
+var codeHttpStatusMap = map[int]int{
+	ErrCodeIllegalArg:   http.StatusBadRequest,
+	ErrCodeIllegalState: http.StatusTooEarly,
+	ErrCodeUnAuth:       http.StatusUnauthorized,
+	ErrCodeForbidden:    http.StatusForbidden,
+	ErrCodeTooOften:     http.StatusTooManyRequests,
+	ErrCodeNotFound:     http.StatusNotFound,
+	ErrCodeOK:           http.StatusOK,
+}
+
+func ToHttpStatus(bizErrCode int, defaultHttpStatus int) int {
+	if v, ok := codeHttpStatusMap[bizErrCode]; ok {
+		return v
 	}
+	return defaultHttpStatus
 }

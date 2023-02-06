@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-//创建用于输出db日志的日志器，默认读取conf/log_db配置文件，如无则调用slog.NewLogger()
+// 创建用于输出db日志的日志器，默认读取conf/log_db配置文件，如无则调用slog.NewLogger()
 func newDBZapLogger() *zap.Logger {
 	if logger, err := slog.NewLoggerFromCfgFile(`log_db`); err == nil {
 		return logger.With(slog.NewTagField(`db`))
@@ -23,7 +23,7 @@ func newDBZapLogger() *zap.Logger {
 	return slog.NewLogger(`db`)
 }
 
-//输出日志到std，仅用于调试
+// 输出日志到std，仅用于调试
 func newDBStdLogger(option LoggerOption) glog.Interface {
 	return glog.New(
 		log.New(os.Stdout, "", log.LstdFlags),
@@ -35,7 +35,7 @@ func newDBStdLogger(option LoggerOption) glog.Interface {
 		})
 }
 
-//日志选项，参考glog.Config
+// 日志选项，参考glog.Config
 type LoggerOption struct {
 	//Debug                     bool        //是否启用调试，如果为true，则将使用std日志器
 	LogLevel                  glog.LogLevel //日志级别
@@ -43,14 +43,14 @@ type LoggerOption struct {
 	IgnoreRecordNotFoundError bool          //是否不输出查询结果为空错误日志
 }
 
-//实现gorm的日志接口，底层使用slog输出日志
+// 实现gorm的日志接口，底层使用slog输出日志
 type Logger struct {
 	option LoggerOption
 	logger *zap.Logger
 	level  glog.LogLevel
 }
 
-//输出SQL日志
+// 输出SQL日志
 func newDBLogger(option LoggerOption) glog.Interface {
 	/*if option.Debug{
 		return newDBStdLogger(option)
@@ -109,10 +109,10 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (sql strin
 	}
 }
 
-//需要跳过的日志调用者路径
+// 需要跳过的日志调用者路径
 const (
 	gormPkg = `gorm.io/gorm`
-	bormPkg = `github.com/bingooh/b-go-util/orm`
+	bormPkg = `b-go-util/orm`
 )
 
 func (l Logger) loggerWithSkippedCaller() *zap.Logger {

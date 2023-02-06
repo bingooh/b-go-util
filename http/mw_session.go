@@ -50,7 +50,7 @@ func (o *MWSessionOption) MustNormalize() *MWSessionOption {
 	return o
 }
 
-//session中间件
+// session中间件
 func MWSession(option *MWSessionOption) gin.HandlerFunc {
 	o := option.MustNormalize()
 
@@ -77,7 +77,7 @@ func MWSession(option *MWSessionOption) gin.HandlerFunc {
 	return sessions.Sessions(o.CookieName, store)
 }
 
-//自动保存session
+// 自动保存session
 func MWSaveSession() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -92,7 +92,7 @@ func MWSaveSession() gin.HandlerFunc {
 	}
 }
 
-//会话
+// 会话
 type Session interface {
 	GSession() sessions.Session
 	Set(key, val interface{}) error              //设置并立刻保存
@@ -108,7 +108,7 @@ type Session interface {
 	StringOrElse(key interface{}, val string) string
 }
 
-//实现Session接口
+// 实现Session接口
 type baseSession struct {
 	gs sessions.Session
 }
@@ -196,7 +196,7 @@ func (s *baseSession) StringOrElse(key interface{}, val string) string {
 	return val
 }
 
-//获取Session，此方法依赖中间件MWSession()
+// 获取Session，此方法依赖中间件MWSession()
 func GetSession(c *gin.Context) Session {
 	if v, exist := c.Get(KeySession); exist {
 		s, ok := v.(Session)

@@ -13,8 +13,8 @@ import (
 
 var rootLogger = NewDebugLogger(``, zapcore.DebugLevel)
 
-//过滤日志标签，返回true则不显示日志。仅用于调试！
-//如果需要过滤日志消息，建议做法应该是定制zapcore.Encoder,过滤日志field
+// 过滤日志标签，返回true则不显示日志。仅用于调试！
+// 如果需要过滤日志消息，建议做法应该是定制zapcore.Encoder,过滤日志field
 var logTagFilter = func(tag string) bool {
 	return false
 }
@@ -30,15 +30,19 @@ func NewTagField(tags ...string) zap.Field {
 	return zap.String(LogTagFieldName, strings.Join(tags, `.`))
 }
 
-func NewConfFromFile(cfgFilePath string) (cfg *Conf, err error) {
+func LoadConf(cfgFilePath string) (cfg *Conf, err error) {
 	cfg = &Conf{}
-	err = conf.ScanConfFile(cfg, cfgFilePath)
+	err = conf.Load(cfg, cfgFilePath)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func LoadDefaultConf() (cfg *Conf, err error) {
+	return LoadConf(LogConfFileName)
 }
 
 func NewLoggerFromCfg(cfg Conf) *zap.Logger {
@@ -102,7 +106,7 @@ func NewLoggerFromCfg(cfg Conf) *zap.Logger {
 }
 
 func NewLoggerFromCfgFile(cfgFilePath string) (*zap.Logger, error) {
-	cfg, err := NewConfFromFile(cfgFilePath)
+	cfg, err := LoadConf(cfgFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +118,7 @@ func RootLogger() *zap.Logger {
 	return rootLogger
 }
 
-//使用自定义的rootLogger
+// 使用自定义的rootLogger
 func InitRootLogger(logger *zap.Logger) {
 	if logger == nil {
 		panic(`logger is nil`)
@@ -123,23 +127,31 @@ func InitRootLogger(logger *zap.Logger) {
 	rootLogger = logger
 }
 
-//使用自定义的rootLogger
+// 使用自定义的rootLogger
 func InitRootLoggerFromCfg(cfg Conf) {
 	InitRootLogger(NewLoggerFromCfg(cfg))
 }
 
-//初始化默认日志组件，建议在主程序启动前调用此方法
+// 初始化默认日志组件，建议在主程序启动前调用此方法
 func MustInitDefaultRootLogger() {
-	cfg, err := NewConfFromFile(LogConfFileName)
-	if err != nil {
-		cfg = &Conf{WriteToConsole: true}
-		log.Printf("读取默认日志配置文件出错,将使用默认日志配置[%v]\n", err)
-	}
-
-	rootLogger = NewLoggerFromCfg(*cfg)
+	MustInitDefaultRootLoggerWithLevel(zapcore.DebugLevel - 1)
 }
 
-//清空缓存的日志，此方法应在主程序退出前调用
+func MustInitDefaultRootLoggerWithLevel(level zapcore.Level) {
+	cfg, err := LoadDefaultConf()
+	if err != nil {
+		log.Printf("读取默认日志配置文件出错,将使用默认日志配置[%v]\n", err)
+		cfg = &Conf{WriteToConsole: true}
+	}
+
+	if level >= zapcore.DebugLevel {
+		cfg.Level = level
+	}
+
+	InitRootLoggerFromCfg(*cfg)
+}
+
+// 清空缓存的日志，此方法应在主程序退出前调用
 func Flush() error {
 	if rootLogger != nil {
 		return rootLogger.Sync()
@@ -148,7 +160,7 @@ func Flush() error {
 	return nil
 }
 
-//必须先初始化rootLogger，否则调用此方法将抛出空指针错误
+// 必须先初始化rootLogger，否则调用此方法将抛出空指针错误
 func NewLogger(tags ...string) *zap.Logger {
 	tag := strings.Join(tags, `.`)
 
@@ -159,7 +171,7 @@ func NewLogger(tags ...string) *zap.Logger {
 	return rootLogger.With(NewTagField(tags...))
 }
 
-//用于调试的日志器
+// 用于调试的日志器
 func NewDebugLogger(tag string, level zapcore.Level) *zap.Logger {
 	c := zap.NewDevelopmentConfig()
 

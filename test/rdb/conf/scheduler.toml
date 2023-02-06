@@ -1,0 +1,27 @@
+TaskKeyPrefix = "task"#任务redis key前缀，默认task
+
+[redis]
+Addr = "localhost:6379"
+#Password = "111111"
+DB = 1
+
+[tasks.t1]
+Disabled = false#是否禁用
+DisableTaskLock = false#是否禁用任务锁
+TaskLockTTL = "10s"#任务锁TTL，默认10s
+InvokeInternal = "1s"#任务执行间隔时长，默认1m
+InvokeTimeRange = [0, 2359]#任务执行时间区间，格式HHMI，如：[1200,1400]
+
+[tasks.t2]
+Disabled = true
+DisableTaskLock = false
+TaskLockTTL = "10s"
+InvokeInternal = "1m"
+InvokeTimeRange = [1200, 1400]
+
+[tasks.t3]
+Disabled = false
+DisableTaskLock = false
+TaskLockTTL = "10s"
+InvokeInternal = "1s"
+InvokeTimeRange = [0, 2359]

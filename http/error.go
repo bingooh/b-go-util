@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bingooh/b-go-util/util"
@@ -19,7 +18,7 @@ type Error struct {
 	cause  error
 }
 
-//用于序列化json
+// 用于序列化json
 type ErrorAlias struct {
 	Status int    `json:"status"` //状态码
 	Code   int    `json:"code"`   //错误码
@@ -91,10 +90,10 @@ func (e *Error) OK() bool {
 
 func (e *Error) MarshalJSON() ([]byte, error) {
 	if e == nil {
-		return json.Marshal(nil)
+		return util.MarshalJSON(nil)
 	}
 
-	return json.Marshal(&ErrorAlias{
+	return util.MarshalJSON(&ErrorAlias{
 		Status: e.status,
 		Code:   e.code,
 		Msg:    e.msg,
@@ -103,7 +102,7 @@ func (e *Error) MarshalJSON() ([]byte, error) {
 
 func (e *Error) UnmarshalJSON(data []byte) (err error) {
 	a := &ErrorAlias{}
-	if err = json.Unmarshal(data, a); err == nil {
+	if err = util.UnmarshalJSON(data, a); err == nil {
 		e.status = a.Status
 		e.code = a.Code
 		e.msg = a.Msg
@@ -112,7 +111,7 @@ func (e *Error) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-//注：如果err为nil *Error，则返回值nil,true
+// 注：如果err为nil *Error，则返回值nil,true
 func AsError(err error) (*Error, bool) {
 	var e *Error
 

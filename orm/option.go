@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//数据库连接配置，详情参考sql标准库的db.SetXX()方法
+// 数据库连接配置，详情参考sql标准库的db.SetXX()方法
 type ConnOption struct {
 	MaxIdleConns    int           //最大空闲连接数
 	MaxOpenConns    int           //最大打开连接数
@@ -17,7 +17,7 @@ type ConnOption struct {
 	ConnMaxLifeTime time.Duration //连接最大生存时间
 }
 
-//驱动配置优先级:MySQL=>PgSQL
+// 驱动配置优先级:MySQL=>PgSQL
 type Option struct {
 	MySQL *mysql.Config    //mysql驱动配置
 	PgSQL *postgres.Config //pgsql驱动配置

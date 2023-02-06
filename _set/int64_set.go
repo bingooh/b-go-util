@@ -1,4 +1,4 @@
-package util
+package _set
 
 import "fmt"
 
@@ -32,6 +32,38 @@ func (h *Int64Set) Empty() bool {
 func (h *Int64Set) Contains(item int64) bool {
 	_, ok := h.m[item]
 	return ok
+}
+
+func (h *Int64Set) ContainsAll(items ...int64) bool {
+	for _, item := range items {
+		if _, ok := h.m[item]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (h *Int64Set) ContainsSet(other *Int64Set) bool {
+	if other == nil || other.Size() == 0 {
+		return true
+	}
+
+	for k, _ := range other.m {
+		if _, ok := h.m[k]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (h *Int64Set) ForEach(fn func(item int64) bool) {
+	for k, _ := range h.m {
+		if !fn(k) {
+			return
+		}
+	}
 }
 
 func (h *Int64Set) Add(item int64) {

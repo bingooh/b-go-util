@@ -2,6 +2,7 @@ package util
 
 import (
 	srand "crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"log"
 	"math/rand"
@@ -14,20 +15,22 @@ const (
 	ALPHA_NUM = "0123456789abcdefghijklmnopqrstuvwxyz"
 )
 
-var defaultRand = NewRand()
-
 func NewRand() *rand.Rand {
 	return rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-//取值范围[min,max)
+// 取值范围[min,max)
 func RandInt(min, max int) int {
-	return defaultRand.Intn(max-min) + min
+	return NewRand().Intn(max-min) + min
 }
 
-//取值范围[min,max)
+// 取值范围[min,max)
 func RandInt64(min, max int64) int64 {
-	return defaultRand.Int63n(max-min) + min
+	return NewRand().Int63n(max-min) + min
+}
+
+func RandDuration(min, max int) time.Duration {
+	return time.Duration(RandInt(min, max))
 }
 
 func RandNum(size int) string {
@@ -52,13 +55,22 @@ func RandSecureHex(size int) string {
 	return hex.EncodeToString([]byte(RandSecure(size / 2)))
 }
 
+func RandSecureBase64(size int) string {
+	s := base64.StdEncoding.EncodeToString([]byte(RandSecure(size)))
+	if len(s) >= size {
+		return s[:size]
+	}
+
+	return s + RandAlphaNum(size-len(s))
+}
+
 func randBy(seed string, size int) string {
 	if n := len(seed); n < size {
 		seed = strings.Repeat(seed, size/n) + seed[:size%n]
 	}
 
 	src := []byte(seed)
-	defaultRand.Shuffle(len(seed), func(i, j int) {
+	NewRand().Shuffle(len(seed), func(i, j int) {
 		src[i], src[j] = src[j], src[i]
 	})
 

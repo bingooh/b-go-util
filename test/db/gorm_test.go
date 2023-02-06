@@ -110,21 +110,21 @@ func TestSqlCUD(t *testing.T) {
 	//不建议使用软删除，可参考其字段设计
 }
 
-//SQL语句：
-//1个Statement包含多个Clause，1个Clause包含1个SQL语句(表达式)和对应参数
-//db.Model()等会创建1个Statement，后续方法调用会添加/删除此Statement包含的Clause
-//db.Create()/Find()等会解析Statement包含的Clause拼接完整SQL并执行获取执行结果
+// SQL语句：
+// 1个Statement包含多个Clause，1个Clause包含1个SQL语句(表达式)和对应参数
+// db.Model()等会创建1个Statement，后续方法调用会添加/删除此Statement包含的Clause
+// db.Create()/Find()等会解析Statement包含的Clause拼接完整SQL并执行获取执行结果
 //
-//gorm的方法：
+// gorm的方法：
 // - 链式方法：     除Finisher方法外的方法，但db.Raw()后面不再支持链接方法
 // - Finisher方法：如Create()/Find()
 //
-//调用链式方法会修改Statement的Clause，调用Finisher方法会执行SQL
-//首次调用链式方法会创建1个Statement，最近1次调用Finisher方法会销毁当前的Statement，这成为1次会话
-//如果直接调用Finisher方法，会先创建后再销毁Statement，仍然为1次会话
-//会话期间创建的Statement是线程不安全的
+// 调用链式方法会修改Statement的Clause，调用Finisher方法会执行SQL
+// 首次调用链式方法会创建1个Statement，最近1次调用Finisher方法会销毁当前的Statement，这成为1次会话
+// 如果直接调用Finisher方法，会先创建后再销毁Statement，仍然为1次会话
+// 会话期间创建的Statement是线程不安全的
 //
-//db.Session()可以创建1个新会话，默认带有父会话(Statement)的Clause，见测试TestDBSession()
+// db.Session()可以创建1个新会话，默认带有父会话(Statement)的Clause，见测试TestDBSession()
 func TestSqlQuery(t *testing.T) {
 	r := require.New(t)
 	db := mustGetDB(true)
@@ -274,9 +274,16 @@ func TestSqlQueryScan(t *testing.T) {
 	r.NoError(db.Model(&TestUser{}).Scan(&rsUsers).Error) //扫描多条记录。建议使用Find()
 	r.EqualValues(len(users), len(rsUsers))
 
+	var ages []uint64
+	r.NoError(db.Model(&TestUser{}).Select(`age`).Scan(&ages).Error) //扫描多个字段值，建议使用pluck()
+	r.True(len(ages) > 0)
+
 	sumAge := 0
 	r.NoError(db.Model(&TestUser{}).Select(`sum(age)`).Scan(&sumAge).Error) //扫描单个字段值，建议使用take()
 	r.True(sumAge > 0)
+
+	sumAge = 0
+	r.Error(db.Model(&TestUser{}).Select(`sum(age)`).Where(`1=2`).Scan(&sumAge).Error) //报错，不支持将null转换为int
 
 	//逐行扫描
 	//注意：必须关闭返回的rows(遍历完最后1条记录会自动关闭)，否则会一直占有1个数据库连接，可能导致数据库连接耗光

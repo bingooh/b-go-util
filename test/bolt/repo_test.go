@@ -15,7 +15,7 @@ import (
 func mustNewDb() (db *bolt.DB, clear func()) {
 	option := &ubolt.Option{
 		DbFilePath: "./test.db",
-		Timeout:    1 * time.Minute,
+		Options:    bolt.Options{Timeout: 3 * time.Second},
 	}
 
 	db = ubolt.MustNewDb(option)

@@ -13,8 +13,8 @@ func NewProvider() *Provider {
 	}
 }
 
-//key区分数据类型，int(1)!=int64(1)
-func (p *Provider) MustRegister(supplier func() interface{}, keys ...interface{}) {
+// MustRegister key区分数据类型，int(1)!=int64(1)
+func (p *Provider) MustRegister(supplier func() interface{}, keys ...interface{}) *Provider {
 	AssertOk(len(keys) > 0, `keys为空`)
 	AssertOk(supplier != nil, `supplier为空`)
 
@@ -25,6 +25,8 @@ func (p *Provider) MustRegister(supplier func() interface{}, keys ...interface{}
 
 		p.suppliers[key] = supplier
 	}
+
+	return p
 }
 
 func (p *Provider) HasSupplier(key interface{}) bool {

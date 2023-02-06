@@ -20,7 +20,7 @@ func TestScheduler(t *testing.T) {
 		}
 	}
 
-	s := scheduler.MustNewSchedulerFromDefaultCfg()
+	s := scheduler.MustNewDefaultScheduler()
 	r.Panics(func() {
 		//任务名称必须与已有任务选项匹配，否则崩溃
 		s.MustAddTaskFn(`txx`, newTask(`txx`, 0))

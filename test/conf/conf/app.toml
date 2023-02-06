@@ -1,0 +1,6 @@
+env="default"
+age=1
+tags=[1]
+
+[group]
+name="g1"

@@ -9,12 +9,11 @@ import (
 
 var TypeCastErr = errors.New(`type cast err`)
 
-// 任务执行结果
+// Result 任务执行结果
 // Value()返回任务执行结果的值，同时提供Bool()/Int()等帮助方法将结果值转换为对应的数据类型
 // 目前实现仅使用简单的数据类型转换，如Int()基本等价于Value().(int)，但转换失败返回util.TypeCastErr
 type Result interface {
 	Error() error       //任务返回的错误
-	HasError() bool     //任务是否有错
 	Canceled() bool     //任务是否取消
 	Timeout() bool      //任务是否超时
 	Value() interface{} //任务返回的值
@@ -30,44 +29,8 @@ type Result interface {
 	MustString() string
 }
 
-type ResultList []Result
-type ResultMap map[int]Result //key为结果索引值
-
-//遍历结果
-func (l ResultList) Each(fn func(i int, result Result)) {
-	for i, r := range l {
-		fn(i, r)
-	}
-}
-
-//遍历结果，直到fn返回false
-func (l ResultList) ForEach(fn func(i int, result Result) bool) {
-	for i, r := range l {
-		if !fn(i, r) {
-			return
-		}
-	}
-}
-
-//遍历结果
-func (m ResultMap) Each(fn func(key int, result Result)) {
-	for k, v := range m {
-		fn(k, v)
-	}
-}
-
-//遍历结果，直到fn返回false
-func (m ResultMap) ForEach(fn func(key int, result Result) bool) {
-	for k, v := range m {
-		if !fn(k, v) {
-			return
-		}
-	}
-}
-
-//Result实现类
+// BaseResult Result实现类
 type BaseResult struct {
-	lock     sync.Mutex
 	value    interface{}
 	err      error
 	canceled bool
@@ -83,15 +46,11 @@ func NewResultWithCtx(ctx Context) Result {
 }
 
 func NewResultWithContext(ctx context.Context) Result {
-	return NewResultWithCtx(NewCtx(ctx))
+	return NewResultWithCtx(NewContext(ctx))
 }
 
 func (b *BaseResult) Error() error {
 	return b.err
-}
-
-func (b *BaseResult) HasError() bool {
-	return b.err != nil
 }
 
 func (b *BaseResult) Canceled() bool {
@@ -197,4 +156,201 @@ func (b *BaseResult) MustString() string {
 
 func (b *BaseResult) assertNilErr(err error) {
 	util.AssertNilErr(err)
+}
+
+type ResultList struct {
+	values []Result
+}
+
+func NewResultList() *ResultList {
+	return &ResultList{values: make([]Result, 0)}
+}
+
+func (l *ResultList) Size() int {
+	return len(l.values)
+}
+
+func (l *ResultList) Has(idx int) bool {
+	return idx >= 0 && idx < len(l.values)
+}
+
+func (l *ResultList) Get(idx int) Result {
+	if idx >= 0 && idx < len(l.values) {
+		return l.values[idx]
+	}
+
+	return nil
+}
+
+func (l *ResultList) Add(results ...Result) {
+	for _, result := range results {
+		l.values = append(l.values, result)
+	}
+}
+
+func (l *ResultList) ToSlice() []Result {
+	rs := make([]Result, len(l.values))
+	copy(rs, l.values)
+
+	return rs
+}
+
+type SyncResultList struct {
+	lock   sync.RWMutex
+	values []Result
+}
+
+func NewSyncResultList() *SyncResultList {
+	return &SyncResultList{values: make([]Result, 0)}
+}
+
+func (l *SyncResultList) Size() int {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	return len(l.values)
+}
+
+func (l *SyncResultList) Has(idx int) bool {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	return idx >= 0 && idx < len(l.values)
+}
+
+func (l *SyncResultList) Get(idx int) Result {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	if idx >= 0 && idx < len(l.values) {
+		return l.values[idx]
+	}
+
+	return nil
+}
+
+func (l *SyncResultList) Add(results ...Result) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	for _, result := range results {
+		l.values = append(l.values, result)
+	}
+}
+
+func (l *SyncResultList) ToSlice() []Result {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
+
+	rs := make([]Result, len(l.values))
+	copy(rs, l.values)
+
+	return rs
+}
+
+type ResultMap struct {
+	values map[int]Result
+}
+
+func NewResultMap() *ResultMap {
+	return &ResultMap{values: make(map[int]Result, 0)}
+}
+
+func (m *ResultMap) Size() int {
+	return len(m.values)
+}
+
+func (m *ResultMap) Has(key int) bool {
+	_, ok := m.values[key]
+	return ok
+}
+
+func (m *ResultMap) Get(key int) Result {
+	return m.values[key]
+}
+
+func (m *ResultMap) Put(key int, val Result) {
+	m.values[key] = val
+}
+
+func (m *ResultMap) Del(key int) Result {
+	if old, ok := m.values[key]; ok {
+		delete(m.values, key)
+		return old
+	}
+
+	return nil
+}
+
+func (m *ResultMap) ToMap() map[int]Result {
+	rs := make(map[int]Result, len(m.values))
+
+	for k, v := range m.values {
+		rs[k] = v
+	}
+
+	return rs
+}
+
+type SyncResultMap struct {
+	lock   sync.RWMutex
+	values map[int]Result
+}
+
+func NewSyncResultMap() *SyncResultMap {
+	return &SyncResultMap{values: make(map[int]Result, 0)}
+}
+
+func (m *SyncResultMap) Size() int {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	return len(m.values)
+}
+
+func (m *SyncResultMap) Has(key int) bool {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	_, ok := m.values[key]
+	return ok
+}
+
+func (m *SyncResultMap) Get(key int) Result {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	return m.values[key]
+}
+
+func (m *SyncResultMap) Put(key int, val Result) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.values[key] = val
+}
+
+func (m *SyncResultMap) Del(key int) Result {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if old, ok := m.values[key]; ok {
+		delete(m.values, key)
+		return old
+	}
+
+	return nil
+}
+
+func (m *SyncResultMap) ToMap() map[int]Result {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	rs := make(map[int]Result, len(m.values))
+
+	for k, v := range m.values {
+		rs[k] = v
+	}
+
+	return rs
 }

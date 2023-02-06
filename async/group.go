@@ -1,126 +1,96 @@
 package async
 
 import (
-	"context"
 	"github.com/bingooh/b-go-util/util"
 	"sync"
-	"time"
 )
 
-//任务组，执行一组任务并保存其执行结果
-// 注意,目前实现不支持:
-// - 协程1添加任务，协程2等待任务执行完成
-// - 当前任务执行时，向同1个组里添加新的任务
-type Group struct {
-	lock sync.Mutex
-	wg   sync.WaitGroup
-
-	existTaskCount *util.AtomicInt64 //已添加的任务数
-	doneTaskCount  *util.AtomicInt64 //已完成的任务数
-
-	pool   Pool
-	result *GroupResult
+type WaitGroup struct {
+	wg sync.WaitGroup
 }
 
-func NewGroup() *Group {
-	return &Group{
-		existTaskCount: util.NewAtomicInt64(0),
-		doneTaskCount:  util.NewAtomicInt64(0),
-		result:         newGroupResult(),
+func NewWaitGroup() *WaitGroup {
+	return &WaitGroup{}
+}
+
+func (g *WaitGroup) Run(task func()) {
+	g.wg.Add(1)
+
+	go func() {
+		defer g.wg.Done()
+		task()
+	}()
+}
+
+// Wait 等待任务执行完成。调用此方法后再调用g.Run()添加新任务可能触发崩溃错误
+func (g *WaitGroup) Wait() {
+	g.wg.Wait()
+}
+
+// WorkerGroup 多协程执行不同任务
+type WorkerGroup struct {
+	wg     sync.WaitGroup
+	permit chan struct{} //许可证
+}
+
+func NewWorkerGroup(limit int) *WorkerGroup {
+	util.AssertOk(limit > 0, `limit<=0`)
+
+	g := &WorkerGroup{
+		permit: make(chan struct{}, limit),
 	}
-}
 
-//设置Group执行任务使用的协程池
-func (g *Group) WithPool(pool Pool) *Group {
-	util.AssertOk(g.existTaskCount.Value() == 0, "group is running")
-	g.pool = pool
 	return g
 }
 
-//已添加的任务数
-func (g *Group) ExistTaskCount() int64 {
-	return g.existTaskCount.Value()
-}
-
-//已完成的任务数
-func (g *Group) DoneTaskCount() int64 {
-	return g.doneTaskCount.Value()
-}
-
-//待完成的任务数
-func (g *Group) PendingTaskCount() int64 {
-	return g.existTaskCount.Value() - g.doneTaskCount.Value()
-}
-
-//执行任务
-func (g *Group) Run(task func()) {
-	g.RunTask(ToVoidTask(task))
-}
-
-//执行任务
-func (g *Group) RunTask(task Task) {
+func (g *WorkerGroup) Run(task func()) {
 	g.wg.Add(1)
-	i := g.existTaskCount.Incr(1) - 1
+	g.permit <- struct{}{}
 
-	handle(g.pool, func() {
-		defer g.wg.Done()
-		g.collect(i, task.Run())
-	})
+	go func() {
+		defer func() {
+			<-g.permit
+			g.wg.Done()
+		}()
+
+		task()
+	}()
 }
 
-//执行可取消任务
-func (g *Group) RunCancelableTask(ctx context.Context, task Task) {
-	g.wg.Add(1)
-	i := g.existTaskCount.Incr(1) - 1
-
-	handle(g.pool, func() {
-		defer g.wg.Done()
-
-		select {
-		case <-ctx.Done():
-			g.collect(i, NewResultWithContext(ctx))
-		case r := <-runTask(g.pool, task):
-			g.collect(i, r)
-		}
-	})
-
-}
-
-//执行可超时任务
-func (g *Group) RunTimeLimitTask(timeout time.Duration, task Task) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	g.RunCancelableTask(ctx, TaskFn(func() Result {
-		defer time.AfterFunc(1*time.Nanosecond, cancel)
-		return task.Run()
-	}))
-}
-
-//等待任务执行完成并获取执行结果，多次调用将获取相同的执行结果
-func (g *Group) Wait() *GroupResult {
+// Wait 等待任务执行完成。调用此方法后再调用g.Run()添加新任务可能触发崩溃错误
+func (g *WorkerGroup) Wait() {
 	g.wg.Wait()
-	return g.result
 }
 
-//等待任务执行完成或ctx.Done()取消等待
-//注意：如果因ctx.Done()导致结束等待，后续完成的任务执行结果将不会添加到Group里
-func (g *Group) WaitOrCancel(ctx context.Context) *GroupResult {
-	c := DoCancelableTask(ctx, g.wg.Wait)
-
-	g.result.cancel(c)
-	return g.result
+// RoutineGroup 多协程执行同1个任务
+type RoutineGroup struct {
+	wg    sync.WaitGroup
+	task  func()
+	limit int
 }
 
-//等待任务执行完成或超时取消等待(ctx.Done())
-//注意：如果因超时导致结束等待，后续完成的任务执行结果将不会添加到Group里
-func (g *Group) WaitOrTimeout(timeout time.Duration) *GroupResult {
-	c := DoTimeLimitTask(timeout, g.wg.Wait)
-
-	g.result.cancel(c)
-	return g.result
+func NewRoutineGroup(limit int, task func()) *RoutineGroup {
+	util.AssertOk(limit > 0, `limit<=0`)
+	util.AssertOk(task != nil, `task为空`)
+	return &RoutineGroup{limit: limit, task: task}
 }
 
-//收集任务执行结果
-func (g *Group) collect(i int64, result Result) {
-	g.doneTaskCount.Incr(1)
-	g.result.put(int(i), result)
+func (g *RoutineGroup) Start() {
+	g.wg.Add(g.limit)
+	for i := 0; i < g.limit; i++ {
+		go func() {
+			defer g.wg.Done()
+			g.task()
+		}()
+	}
+}
+
+func (g *RoutineGroup) Run() {
+	g.Start()
+	g.Wait()
+}
+
+// Wait 等待任务执行完成。调用此方法后再调用g.Start()可能触发崩溃错误
+func (g *RoutineGroup) Wait() {
+	g.wg.Wait()
 }

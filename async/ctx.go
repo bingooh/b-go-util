@@ -5,7 +5,7 @@ import (
 	"github.com/bingooh/b-go-util/util"
 )
 
-//任务执行上下文
+// 任务执行上下文
 type Context interface {
 	Done() bool     //任务是否完成
 	Canceled() bool //任务是否取消
@@ -23,7 +23,7 @@ type BaseCtx struct {
 }
 
 // ctx可以为nil
-func NewCtx(ctx context.Context) Context {
+func NewContext(ctx context.Context) Context {
 	return &BaseCtx{
 		ctx:   ctx,
 		abort: util.NewAtomicBool(false),
@@ -48,7 +48,7 @@ func (c *BaseCtx) incrCount() {
 	c.count.Incr(1)
 }
 
-//循环执行次数,从1开始
+// 循环执行次数,从1开始
 func (c *BaseCtx) Count() int64 {
 	return c.count.Value()
 }
@@ -68,15 +68,13 @@ func (c *BaseCtx) Error() error {
 	return nil
 }
 
-//内部使用，解决任务执行过程中context.Context完成导致任务的ctx.Done()执行2次问题
+// 内部使用，解决任务执行过程中context.Context完成导致任务的ctx.Done()执行2次问题
 type FreezeCtx struct {
 	ctx  Context
 	done bool
 }
 
-//根据传入的done是否为true，来确定FreezeCtx是否超时或取消
-// - done==true : FreezeCtx.Canceled()/Timeout()总是为false
-// - done==false: FreezeCtx.Canceled()/Timeout()直接返回传入的ctx对应方法的值
+// 根据传入的done是否为true，来确定FreezeCtx是否超时或取消
 func newFreezeCtx(ctx Context, done bool) *FreezeCtx {
 	return &FreezeCtx{done: done, ctx: ctx}
 }

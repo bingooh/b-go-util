@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//创建定时任务，简单打印执行次数
+// 创建定时任务，简单打印执行次数
 func newIntervalTask(prefix string) func(ctx async.Context) {
 	return func(ctx async.Context) {
 		if ctx.Done() {
@@ -21,7 +21,7 @@ func newIntervalTask(prefix string) func(ctx async.Context) {
 	}
 }
 
-//创建定时任务，简单打印执行次数。同时将执行次数设置给count参数
+// 创建定时任务，简单打印执行次数。同时将执行次数设置给count参数
 func newIntervalCountTask(prefix string, count *int64) func(ctx async.Context) {
 	return func(ctx async.Context) {
 		*count = ctx.Count()

@@ -3,15 +3,15 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/bingooh/b-go-util/_interface"
 	"github.com/bingooh/b-go-util/orm"
+	"github.com/bingooh/b-go-util/test/db/repo"
 	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"testing"
 )
 
-//gorm默认使用字段ID作为表主键，如果是其他名称则需配置: gorm:"primaryKey"
+// gorm默认使用字段ID作为表主键，如果是其他名称则需配置: gorm:"primaryKey"
 type TestUser struct {
 	ID        uint64 `json:"id"   gorm:"primaryKey;autoIncrement"`
 	Name      string `json:"name" gorm:"type:varchar(200);not null"`
@@ -28,9 +28,10 @@ type TestUser struct {
 
 func resetTables(db *gorm.DB) {
 	var user *TestUser
+	var tmm *repo.TemplateModel
 
-	util.AssertNilErr(db.Migrator().DropTable(user))
-	util.AssertNilErr(db.AutoMigrate(user))
+	util.AssertNilErr(db.Migrator().DropTable(user, tmm))
+	util.AssertNilErr(db.AutoMigrate(user, tmm))
 }
 
 func mustInsertNUsersForQuery(db *gorm.DB, n int, resetTable bool) (users []*TestUser) {
@@ -39,8 +40,8 @@ func mustInsertNUsersForQuery(db *gorm.DB, n int, resetTable bool) (users []*Tes
 	}
 
 	for i := 0; i < n; i++ {
-		n := uint16(i + 1)
-		users = append(users, &TestUser{Name: fmt.Sprintf(`user%v`, n), Age: n, Sex: uint8(n % 2)})
+		i := uint16(i + 1)
+		users = append(users, &TestUser{Name: fmt.Sprintf(`user%v`, i), Age: i, Sex: uint8(i % 2)})
 	}
 
 	util.AssertNilErr(db.Create(users).Error)
@@ -52,7 +53,7 @@ func mustInsertUsersForQuery(db *gorm.DB) (users []*TestUser) {
 }
 
 func mustGetDB(resetTable bool) *gorm.DB {
-	db := orm.MustNewDBFromDefaultCfgFile() //读取默认配置文件db.toml
+	db := orm.MustNewDefaultDB() //读取默认配置文件db.toml
 	if resetTable {
 		resetTables(db)
 	}
@@ -77,7 +78,6 @@ func TestDBWithContext(t *testing.T) {
 
 func TestBatchUpdates(t *testing.T) {
 	r := require.New(t)
-	ctx := context.Background()
 	db := mustGetDB(true)
 	defer orm.CloseDB(db)
 
@@ -95,116 +95,28 @@ func TestBatchUpdates(t *testing.T) {
 	user2 := users[2]
 
 	//更新全部字段，因未传入需更新的字段
-	helper := orm.NewBatchUpdateHelper(db)
-	r.NoError(helper.Updates(ctx, users)) //直接传入记录数组
+	n, err := orm.BatchUpdate(db, users)
+	r.NoError(err)
+	r.EqualValues(len(users), n)
 	assertUserEqual(user0)
 
 	//更新指定字段，会同时更新updated_at字段
 	user0.Name = `bingo`
 	user1.Age = 100
-	helper.WithColumns(`name`, `age`)
-	r.NoError(helper.Updates(ctx, users))
+	_, err = orm.BatchUpdate(db, users, orm.ScopeSelect(`name`, `age`))
+	r.NoError(err)
 	assertUserEqual(user0)
 	assertUserEqual(user1)
 	assertUserEqual(user2)
 
 	//指定忽略更新字段，即更新除忽略字段以外的字段
 	user2.Name = `bingo`
-	helper.WithOmitColumns(`name`, `age`)
-	r.NoError(helper.Updates(ctx, users))
+	_, err = orm.BatchUpdate(db, users, orm.ScopeOmit(`name`, `age`))
+	r.NoError(err)
 
 	user22 := &TestUser{ID: user2.ID}
 	r.NoError(db.Take(user22).Error)
 	r.NotEqual(user22.Name, user2.Name) //未更新name字段
-}
-
-func TestGetFieldValues(t *testing.T) {
-	r := require.New(t)
-	var vals []interface{}
-
-	type User struct {
-		ID  int64
-		Age int16
-	}
-
-	//user0包含零值字段ID/Age
-	var users []*User
-	for i := 0; i < 5; i++ {
-		users = append(users, &User{ID: int64(i), Age: int16(i)})
-	}
-
-	//user0包含零值字段id/age
-	var userMapSlice []map[string]interface{}
-	for i := 0; i < 5; i++ {
-		user := map[string]interface{}{
-			`id`: int64(i), `age`: int16(i),
-		}
-		userMapSlice = append(userMapSlice, user)
-	}
-
-	//断言vals是[]int64且与items相等
-	assertEqualInt64Slice := func(vals []interface{}, items ...int64) {
-		//items和vals元素类型和顺序必须相同
-		r.EqualValues(items, _interface.ToInt64Slice(vals...))
-		return
-	}
-
-	//测试1条struct
-	vals = orm.GetFieldValues(`id`, true, users[1])
-	r.EqualValues(0, len(vals)) //字段区分大小写，id不匹配字段ID
-
-	vals = orm.GetFieldValues(`ID`, true, users[1])
-	r.EqualValues(1, vals[0])
-
-	vals = orm.GetFieldValues(`Age`, true, users[0])
-	r.EqualValues(0, len(vals)) //忽略零值字段
-
-	vals = orm.GetFieldValues(`Age`, false, users[0])
-	r.EqualValues(1, len(vals)) //不忽略零值字段
-	r.EqualValues(0, vals[0])
-
-	//测试1条map
-	vals = orm.GetFieldValues(`ID`, true, userMapSlice[1])
-	r.EqualValues(0, len(vals)) //字段区分大小写，ID不匹配字段id
-
-	vals = orm.GetFieldValues(`id`, true, userMapSlice[1])
-	r.EqualValues(1, vals[0])
-
-	vals = orm.GetFieldValues(`age`, true, userMapSlice[0])
-	r.EqualValues(0, len(vals)) //忽略零值字段
-
-	vals = orm.GetFieldValues(`age`, false, userMapSlice[0])
-	r.EqualValues(1, len(vals)) //不忽略零值字段
-	r.EqualValues(0, vals[0])
-
-	//测试多条记录
-	vals = orm.GetFieldValues(`ID`, true, users)
-	assertEqualInt64Slice(vals, 1, 2, 3, 4)
-
-	vals = orm.GetFieldValues(`id`, true, userMapSlice)
-	assertEqualInt64Slice(vals, 1, 2, 3, 4)
-
-	//将users年龄设置为相同，测试去重
-	for i := 0; i < len(users); i++ {
-		users[i].Age = 10
-		userMapSlice[i][`age`] = 10
-	}
-	vals = orm.GetFieldValues(`Age`, true, users)
-	r.EqualValues(1, len(vals))
-	r.EqualValues(10, vals[0])
-
-	vals = orm.GetFieldValues(`age`, true, userMapSlice)
-	r.EqualValues(1, len(vals))
-	r.EqualValues(10, vals[0])
-
-	//将user4置为nil,测试忽略nil值
-	users[4] = nil
-	userMapSlice[4] = nil
-	vals = orm.GetFieldValues(`ID`, true, users)
-	assertEqualInt64Slice(vals, 1, 2, 3)
-
-	vals = orm.GetFieldValues(`id`, true, userMapSlice)
-	assertEqualInt64Slice(vals, 1, 2, 3)
 }
 
 type UserAgeScope struct {

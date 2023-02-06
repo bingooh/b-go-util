@@ -28,6 +28,22 @@ func MustMarshalJSON(v interface{}) []byte {
 	return data
 }
 
+func PrintlnJson(v interface{}, pretty bool) {
+	var err error
+	var data []byte
+	if pretty {
+		data, err = json.MarshalIndent(v, ``, `  `)
+	} else {
+		data, err = json.Marshal(v)
+	}
+
+	if err == nil {
+		fmt.Println(string(data))
+	} else {
+		fmt.Println(`println json err:`, err)
+	}
+}
+
 func ToRawJSON(data interface{}) (stdJSON.RawMessage, bool) {
 	switch v := data.(type) {
 	case []byte:
@@ -57,12 +73,12 @@ func ToJsonBytes(v interface{}) ([]byte, error) {
 	return MarshalJSON(v)
 }
 
-//此错误可能来自GetJSONField().LastError()
+// 此错误可能来自GetJSONField().LastError()
 func IsJSONFieldNotFoundErr(err error) bool {
 	return err != nil && strings.HasSuffix(err.Error(), `not found`)
 }
 
-//获取JSON字段值,field支持路径，见jsonitor文档
+// 获取JSON字段值,field支持路径，见jsonitor文档
 func GetJSONField(data []byte, field string) jsoniter.Any {
 	var fields []interface{}
 	for _, v := range strings.Split(field, `.`) {
@@ -72,8 +88,8 @@ func GetJSONField(data []byte, field string) jsoniter.Any {
 	return json.Get(data, fields...)
 }
 
-//获取JSON字段值,field支持路径，见jsonitor文档，如果解析出错，返回可读性错误
-//注：jsonitor转换整数字段值类似js，比如字段值为`11abc`，则调用q.ToInt()返回整数11，且q.LastError()为空
+// 获取JSON字段值,field支持路径，见jsonitor文档，如果解析出错，返回可读性错误
+// 注：jsonitor转换整数字段值类似js，比如字段值为`11abc`，则调用q.ToInt()返回整数11，且q.LastError()为空
 func ParseJSONField(tip string, data []byte, field string) (jsoniter.Any, error) {
 	q := GetJSONField(data, field)
 
@@ -89,7 +105,7 @@ func ParseJSONField(tip string, data []byte, field string) (jsoniter.Any, error)
 	return q, nil
 }
 
-//设置JSON字段值，field支持路径，见sjson库文档
+// 设置JSON字段值，field支持路径，见sjson库文档
 func SetJSONField(data []byte, field string, val interface{}) (rs []byte, err error) {
 	switch v := val.(type) {
 	case []byte:
@@ -109,7 +125,7 @@ func SetJSONField(data []byte, field string, val interface{}) (rs []byte, err er
 	return nil, fmt.Errorf(`设置JSON字段出错[field=%s,val=%v,data=%v]->%w`, field, val, string(data), err)
 }
 
-//删除JSON字段，field支持路径，见sjson库文档
+// 删除JSON字段，field支持路径，见sjson库文档
 func DelJSONField(data []byte, field string) (rs []byte, err error) {
 	rs, err = sjson.DeleteBytes(data, field)
 	if err != nil {

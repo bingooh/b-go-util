@@ -13,40 +13,45 @@ const (
 	TOO_FREQUENT_PREFIX = `tf_`
 )
 
-//简单访问频率限制
+var tfIncrScript = redis.NewScript(`
+	local v = redis.call('INCR', KEYS[1])
+	if tonumber(v) == 1 then
+		redis.call('EXPIRE', KEYS[1], ARGV[1])
+	end
+	return v
+    `)
+
+// 简单访问频率限制
 type RateLimiter struct {
 	tooOftenPrefix string
 	tooFreqPrefix  string
 	client         *redis.Client
 }
 
-func MustNewRateLimiter(prefix string, redisClient *redis.Client) *RateLimiter {
+func MustNewRateLimiter(prefix string, client *redis.Client) *RateLimiter {
 	util.AssertOk(!_string.Empty(prefix), `prefix is empty`)
 
 	return &RateLimiter{
 		TOO_OFTEN_PREFIX + prefix,
 		TOO_FREQUENT_PREFIX + prefix,
-		redisClient,
+		client,
 	}
 }
 
-/*如果key存在则返回true，否则设置超时时间*/
+// IsTooOften 如果key存在则返回true
 func (r *RateLimiter) IsTooOften(ctx context.Context, key string, expire time.Duration) bool {
 	return !r.client.SetNX(ctx, r.TooOftenKey(key), nil, expire).Val()
 }
 
-/*如果key对应的value>=limit则返回true，否则+1，如果value为0则设置超时时间*/
+// IsTooFrequent 如果key对应的value>=limit则返回true，否则+1
 func (r *RateLimiter) IsTooFrequent(ctx context.Context, key string, limit int, expire time.Duration) bool {
 	if limit <= 0 {
 		return true
 	}
 
-	key = r.TooFreqKey(key)
-	if r.client.SetNX(ctx, key, 1, expire).Val() {
-		return false
-	}
-
-	v, err := r.client.Incr(ctx, key).Result()
+	//直接执行incr()时key可能已过期删除，此时设置key+1会没有设置ttl，以下使用脚本
+	v, err := tfIncrScript.Run(ctx, r.client,
+		[]string{r.TooFreqKey(key)}, int64(expire.Seconds())).Int64()
 
 	return err != nil && err != redis.Nil || v > int64(limit)
 }

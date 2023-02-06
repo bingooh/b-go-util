@@ -63,7 +63,7 @@ func MustNewPool(option *ClientOption, logger zerolog.Logger) *Pool {
 	}
 }
 
-//一直等待直到获取可用连接
+// 一直等待直到获取可用连接
 func (p *Pool) Get() (*ClientConn, error) {
 	return p.GetWithTimeout(p.option.GetConnTimeout)
 }

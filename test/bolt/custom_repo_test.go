@@ -1,10 +1,10 @@
 package bolt
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bingooh/b-go-util/_string"
 	ubolt "github.com/bingooh/b-go-util/bolt"
+	"github.com/bingooh/b-go-util/util"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 	"strconv"
@@ -16,7 +16,7 @@ type User struct {
 	Name string
 }
 
-//存放user对象，使用json序列化
+// 存放user对象，使用json序列化
 type UserRepository struct {
 	*ubolt.Repository
 }
@@ -39,7 +39,7 @@ func (r *UserRepository) PutUser(user *User) error {
 		}
 	}
 
-	if userJson, err := json.Marshal(user); err != nil {
+	if userJson, err := util.MarshalJSON(user); err != nil {
 		return err
 	} else {
 		return r.Put(user.Id, userJson)
@@ -55,7 +55,7 @@ func (r *UserRepository) GetUser(id string) (*User, error) {
 		return nil, err
 	} else {
 		user := new(User)
-		if err := json.Unmarshal(userJson, user); err != nil {
+		if err := util.UnmarshalJSON(userJson, user); err != nil {
 			return nil, err
 		}
 

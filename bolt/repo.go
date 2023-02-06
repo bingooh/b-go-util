@@ -87,7 +87,7 @@ func (r *Repository) PutInt64(key string, val int64) error {
 	return r.PutString(key, strconv.FormatInt(val, 10))
 }
 
-//key对应的值必须为整数，否则将报错
+// key对应的值必须为整数，否则将报错
 func (r *Repository) Incr(key string, n int64) (int64, error) {
 	err := r.Update(func(bucket *bolt.Bucket) error {
 		if val := bucket.Get([]byte(key)); val != nil {
@@ -176,7 +176,7 @@ func (r *Repository) Get(key string) ([]byte, error) {
 	return data, err
 }
 
-//GetXX() 如果key不存在，返回默认零值，而不是返回错误
+// GetXX() 如果key不存在，返回默认零值，而不是返回错误
 func (r *Repository) GetString(key string) (string, error) {
 	if val, err := r.Get(key); err != nil {
 		return "", err
@@ -270,7 +270,7 @@ func (r *Repository) KeySize() (int, error) {
 	return GetBucketKeySize(r.db, r.bucketName)
 }
 
-//获取此bucket对应的下1个序列值
+// 获取此bucket对应的下1个序列值
 func (r *Repository) NextId() (uint64, error) {
 	var id uint64
 	err := r.Update(func(bucket *bolt.Bucket) error {
@@ -302,15 +302,15 @@ func (r *Repository) NextIdString() (string, error) {
 	}
 }
 
-//迭代查询每条记录，直到fn返回false或err不为空
-//如果fn要保存k，v到外部变量，则需要copy()，具体请阅读bucket.ForEach()注释
+// 迭代查询每条记录，直到fn返回false或err不为空
+// 如果fn要保存k，v到外部变量，则需要copy()，具体请阅读bucket.ForEach()注释
 func (r *Repository) ForEach(fn func(k, v []byte) (bool, error), prefix ...string) error {
 	return r.View(func(bucket *bolt.Bucket) error {
 		return r.iterateCursor(fn, bucket.Cursor(), prefix...)
 	})
 }
 
-//删除每条记录，直到fn返回false或err不为空
+// 删除每条记录，直到fn返回false或err不为空
 func (r *Repository) DelEach(fn func(k, v []byte) (bool, error), prefix ...string) error {
 	return r.Update(func(bucket *bolt.Bucket) error {
 		c := bucket.Cursor()

@@ -6,13 +6,7 @@ import (
 	"strings"
 )
 
-/*toCent  转换金额(单位：元)为金额(单位：分)，最多支持2位小数，如果超出则忽略多余小数
-参数:
-*	amount	  string    金额字符串，如100,000.01
-返回值:
-*	value	  int64     金额(单位:分)
-*	err  	  error     ParseErr
-*/
+// ToCent 转换金额(单位：元)为金额(单位：分)，最多支持2位小数，如果超出则忽略多余小数
 func ToCent(amount string) (int64, error) {
 	val := strings.ReplaceAll(amount, ",", "")
 	idx := strings.LastIndex(val, ".") //小数点位置
@@ -34,5 +28,4 @@ func ToCent(amount string) (int64, error) {
 	} else {
 		return 0, fmt.Errorf("parse amount '%v' err->%w", amount, err)
 	}
-
 }

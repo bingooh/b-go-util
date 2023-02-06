@@ -15,8 +15,8 @@ func TestBizError(t *testing.T) {
 	//如果err为空，则错误码为ErrCodeOK
 	var e1 error
 	var e2 *util.BizError
-	r.True(util.HasErrCodeOK(e1))
-	r.True(util.HasErrCodeOK(e2))
+	r.True(util.IsOKErr(e1))
+	r.True(util.IsOKErr(e2))
 
 	e11, ok := util.AsBizError(e1)
 	r.True(e11 == nil)
@@ -39,7 +39,7 @@ func TestBizError(t *testing.T) {
 
 	e111 := util.ToBizError(e1) //e1为nil
 	r.True(e111 != nil)
-	r.True(util.HasErrCodeOK(e111))
+	r.True(util.IsOKErr(e111))
 
 	//e5->e4
 	e4 := errors.New(`e4`)
@@ -53,7 +53,7 @@ func TestBizError(t *testing.T) {
 	r.True(errors.Is(e6, e4))
 
 	//因为e6.cause==e5,所以以下测试通过
-	r.True(util.HasErrCodeNil(e6))
+	r.True(util.IsNilErr(e6))
 	r.True(util.IsBizError(e6))
 
 	_, ok = e6.(*util.BizError)
@@ -61,7 +61,7 @@ func TestBizError(t *testing.T) {
 
 	e55, ok := util.AsBizError(e6)
 	r.True(ok)
-	r.True(util.HasErrCodeNil(e55))
+	r.True(util.IsNilErr(e55))
 	r.True(e5 == e55) //指针地址相同，指向同1个对象
 
 	//输出格式为:(code)msg->cause

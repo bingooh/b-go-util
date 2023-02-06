@@ -1,18 +1,20 @@
 package async
 
 import (
+	"context"
 	"github.com/bingooh/b-go-util/util"
 	"sync"
+	"time"
 )
 
-//门闩，调用latch.Wait()将阻塞当前线程，直到调用latch.Open()
-//如果调用sync.WaitGroup：wait()->add()，可能会报崩溃错误，必须等上次等待的协程全部释放后才能再次调用add(),即可理解为wg不可重用
+// Latch 门闩，如果已关闭则调用latch.Wait()将阻塞当前线程，直到调用latch.Open()
+// 如果调用sync.WaitGroup：wait()->add()，可能会报崩溃错误，必须等上次等待的协程全部释放后才能再次调用add(),即可理解为wg不可重用
 type Latch struct {
 	isClosed *util.AtomicBool
 	cond     *sync.Cond
 }
 
-//创建门闩
+// 创建门闩
 func NewLatch(isClosed bool) *Latch {
 	l := &Latch{
 		cond:     sync.NewCond(&sync.Mutex{}),
@@ -28,7 +30,7 @@ func (l *Latch) Open() {
 	}
 }
 
-//打开门闩，如果门闩已经打开返回false,如果从关闭变为打开返回true
+// 打开门闩，如果门闩已经打开返回false,如果从关闭变为打开返回true
 func (l *Latch) CAOpen() bool {
 	if l.isClosed.False() {
 		return false
@@ -43,7 +45,7 @@ func (l *Latch) Close() {
 	}
 }
 
-//关闭门闩，如果门闩已经关闭返回false,如果从打开变为关闭返回true
+// 关闭门闩，如果门闩已经关闭返回false,如果从打开变为关闭返回true
 func (l *Latch) CAClose() bool {
 	if l.isClosed.True() {
 		return false
@@ -52,8 +54,8 @@ func (l *Latch) CAClose() bool {
 	return l.CASwap(false)
 }
 
-//比较latch的关闭状态是否与expectIsClosed相同
-//如果不同返回false，如果相同则返回true，且设置latch关闭状态为!expectIsClosed
+// 比较latch的关闭状态是否与expectIsClosed相同
+// 如果不同返回false，如果相同则返回true，且设置latch关闭状态为!expectIsClosed
 func (l *Latch) CASwap(expectIsClosed bool) bool {
 	l.cond.L.Lock()
 	defer l.cond.L.Unlock()
@@ -68,6 +70,10 @@ func (l *Latch) CASwap(expectIsClosed bool) bool {
 	}
 
 	return true
+}
+
+func (l *Latch) IsOpened() bool {
+	return !l.isClosed.Value()
 }
 
 func (l *Latch) IsClosed() bool {
@@ -86,4 +92,14 @@ func (l *Latch) Wait() {
 	}
 
 	l.cond.L.Unlock()
+}
+
+// WaitOrCanceled 等待或取消
+func (l *Latch) WaitOrCanceled(ctx context.Context) error {
+	return DoCancelableTask(ctx, l.Wait).Error()
+}
+
+// WaitOrTimeout 等待或超时
+func (l *Latch) WaitOrTimeout(timeout time.Duration) error {
+	return DoTimeLimitTask(timeout, l.Wait).Error()
 }

@@ -21,5 +21,7 @@ func (c *CancelableContext) Context() context.Context {
 }
 
 func (c *CancelableContext) Cancel() {
-	c.cancel()
+	if c != nil {
+		c.cancel()
+	}
 }

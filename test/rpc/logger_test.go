@@ -15,23 +15,22 @@ func TestLogger(t *testing.T) {
 	r := require.New(t)
 	ctx := context.Background()
 
-	logger := rpc.NewGRPCLogger(`server`)
+	mw := rpc.NewMWLogger().EnableLogPayload(false)
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			rpc.LogUnaryServerInterceptor(logger),
-			rpc.LogPayloadUnaryServerInterceptor(logger),
+			mw.NewUnaryServerInterceptor(),
+			mw.NewPayloadUnaryServerInterceptor(),
 		),
 	)
 	defer server.GracefulStop()
 
-	pb.RegisterGreeterServer(server, &pb.HiServer{})
+	pb.RegisterGreeterServer(server, &pb.HiAuthServer{})
 	rpc.MustStartServer(server, port)
 
-	logger = rpc.NewGRPCLogger(`client`)
 	conn := rpc.MustNewInsecureClientConn(port, 0,
 		grpc.WithChainUnaryInterceptor(
-			rpc.LogUnaryClientInterceptor(logger),
-			rpc.LogPayloadUnaryClientInterceptor(logger),
+			mw.NewUnaryClientInterceptor(),
+			mw.NewPayloadUnaryClientInterceptor(),
 		),
 	)
 	client := pb.NewGreeterClient(conn)

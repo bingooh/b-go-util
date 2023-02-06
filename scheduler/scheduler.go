@@ -10,6 +10,21 @@ import (
 	"time"
 )
 
+var DefaultScheduler *Scheduler
+
+func MustGetDefaultScheduler() *Scheduler {
+	util.AssertOk(DefaultScheduler != nil, `defaultScheduler为空`)
+	return DefaultScheduler
+}
+
+func MustInitDefaultScheduler() *Scheduler {
+	if DefaultScheduler == nil {
+		DefaultScheduler = MustNewDefaultScheduler()
+	}
+
+	return DefaultScheduler
+}
+
 type Scheduler struct {
 	option *Option
 	logger *zap.Logger
@@ -20,10 +35,10 @@ type Scheduler struct {
 	tasks      map[string]cron.EntryID //key为任务名称
 }
 
-//读取默认配置文件scheduler.toml创建Scheduler
-func MustNewSchedulerFromDefaultCfg() *Scheduler {
+// 读取默认配置文件scheduler.toml创建Scheduler
+func MustNewDefaultScheduler() *Scheduler {
 	option := &Option{}
-	conf.MustScanConfFile(option, `scheduler.toml`)
+	conf.MustLoad(option, `scheduler`)
 	return MustNewScheduler(option)
 }
 
@@ -106,12 +121,20 @@ func (s *Scheduler) RemoveTasks(names ...string) {
 }
 
 func (s *Scheduler) Start() {
+	if s == nil {
+		return
+	}
+
 	s.cr.Start()
 	s.logger.Info(`scheduler已启动`)
 }
 
-//此方法会阻塞当前线程，直到超时或所有任务停止执行
+// 此方法会阻塞当前线程，直到超时或所有任务停止执行
 func (s *Scheduler) Stop(timeout time.Duration) {
+	if s == nil {
+		return
+	}
+
 	if timeout <= 0 {
 		<-s.cr.Stop().Done()
 		s.logger.Info(`scheduler已停止`)

@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-//会话锁续约失败回调函数
+// 会话锁续约失败回调函数
 type OnLockRefreshFailed func(lockName string)
 
-//创建锁
+// 创建锁
 type Locker struct {
 	*redislock.Client
 
@@ -22,26 +22,26 @@ type Locker struct {
 	onLockRefreshFailedFn OnLockRefreshFailed
 }
 
-func NewLocker(client *redis.Client) *Locker {
+func NewLocker(client redis.UniversalClient) *Locker {
 	return &Locker{
 		Client: redislock.New(client),
 	}
 }
 
-//设置锁续约失败回调函数
+// 设置锁续约失败回调函数
 func (l *Locker) WithOnLockRefreshFailed(fn OnLockRefreshFailed) *Locker {
 	l.onLockRefreshFailedFn = fn
 	return l
 }
 
-//设备获取锁
+// 设置重试获取锁
 func (l *Locker) WithRetryOption(limit int, interval time.Duration) *Locker {
 	l.retryLimit = limit
 	l.retryInterval = interval
 	return l
 }
 
-//获取锁
+// 获取锁
 func (l *Locker) obtainLock(ctx context.Context, lockName string, lockTTL time.Duration) (lock *redislock.Lock, err error) {
 	//由于redislock库的问题(redislock.go/64行)，lockTTL参数值将设置给ctx作为其超时时间
 	//假设设置lockTTL=1秒，重试策略为每秒重试1次，最多10次。则实际会在1秒后返回获取锁失败，即lockTTL超时导致获取锁失败
@@ -75,7 +75,7 @@ func (l *Locker) obtainLock(ctx context.Context, lockName string, lockTTL time.D
 	return
 }
 
-//获取会话锁，会话锁会自动续约锁
+// 获取会话锁，会话锁会自动续约锁
 func (l *Locker) ObtainSessionLock(ctx context.Context, lockName string, lockTTL time.Duration) (*SessionLock, error) {
 	lock, err := l.obtainLock(ctx, lockName, lockTTL)
 	if err != nil {
@@ -85,14 +85,14 @@ func (l *Locker) ObtainSessionLock(ctx context.Context, lockName string, lockTTL
 	return newSessionLock(lock, lockTTL, l.onLockRefreshFailedFn), nil
 }
 
-//自动续约锁(会话锁)
+// 自动续约锁(会话锁)
 type SessionLock struct {
 	*redislock.Lock
 
 	logger              *zap.Logger
 	lockTTL             time.Duration
 	isReleased          *util.AtomicBool
-	refreshRunner       *async.Runner
+	refreshRunner       async.Runner
 	onLockRefreshFailed OnLockRefreshFailed
 }
 
@@ -105,7 +105,8 @@ func newSessionLock(lock *redislock.Lock, lockTTL time.Duration, onLockRefreshFa
 		onLockRefreshFailed: onLockRefreshFailed,
 	}
 
-	s.refreshRunner = async.NewRunner(async.BgTaskFn(s.refreshBgTask)).MustStart()
+	s.refreshRunner = async.NewTaskRunner(async.BgTaskFn(s.refreshBgTask))
+	s.refreshRunner.Start()
 	return s
 }
 
@@ -129,7 +130,7 @@ func (s *SessionLock) IsReleased() bool {
 	return s == nil || s.isReleased.Value()
 }
 
-func (s *SessionLock) refreshBgTask(ctx context.Context) (<-chan struct{}, error) {
+func (s *SessionLock) refreshBgTask(ctx context.Context) <-chan struct{} {
 	//在锁到期前2秒续约，如果锁的TTL小于2秒，则每隔ttl/2时长进行续约
 	refreshInterval := s.lockTTL - 2*time.Second
 	if refreshInterval <= 0 {
@@ -154,5 +155,5 @@ func (s *SessionLock) refreshBgTask(ctx context.Context) (<-chan struct{}, error
 			s.onLockRefreshFailed(s.Lock.Key())
 		}
 
-	}), nil
+	})
 }

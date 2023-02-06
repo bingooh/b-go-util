@@ -6,6 +6,8 @@ package test.rpc.hi;
 
 service Greeter {
   rpc Hi (HiReq) returns (HiRsp) {}
+  rpc NewServerStream(HiReq)returns(stream HiRsp){}
+  rpc NewStream(stream HiReq)returns(stream HiRsp){}
 }
 
 service Waiter {

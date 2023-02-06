@@ -24,8 +24,8 @@ func MustGetDefaultDB() *gorm.DB {
 	return defaultDB
 }
 
-func MustInitDefaultDBFromDefaultCfgFile() *gorm.DB {
-	ResetDefaultDB(MustNewDBFromDefaultCfgFile())
+func MustInitDefaultDB() *gorm.DB {
+	ResetDefaultDB(MustNewDefaultDB())
 	return defaultDB
 }
 
@@ -53,18 +53,18 @@ func MustNewDB(option *Option) *gorm.DB {
 
 func MustNewDBFromCfgFile(fileName string) *gorm.DB {
 	option := &Option{}
-	conf.MustScanConfFile(option, fileName)
+	conf.MustLoad(option, fileName)
 	return MustNewDB(option)
 }
 
-//读取默认配置文件db.toml创建数据库实例
-func MustNewDBFromDefaultCfgFile() *gorm.DB {
+// MustNewDefaultDB 读取默认配置文件db.toml创建数据库实例
+func MustNewDefaultDB() *gorm.DB {
 	return MustNewDBFromCfgFile(`db`)
 }
 
-//关闭数据库
-//gorm内部使用数据库连接池，仍然建议关闭数据库
-//注意：查询返回的rows应遍历完或关闭，否则此查询将一直占用1个数据库连接，可能导致连接耗尽
+// 关闭数据库
+// gorm内部使用数据库连接池，仍然建议关闭数据库
+// 注意：查询返回的rows应遍历完后关闭，否则此查询将一直占用1个数据库连接，可能导致连接耗尽
 func CloseDB(db *gorm.DB) error {
 	if db == nil {
 		return nil

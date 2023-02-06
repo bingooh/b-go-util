@@ -9,6 +9,7 @@ import (
 
 func TestSlog(t *testing.T) {
 	slog.MustInitDefaultRootLogger()
+	//slog.MustInitDefaultRootLoggerWithLevel(zapcore.WarnLevel)
 
 	logger := slog.NewLogger(`test`)
 	logger.Debug(`debug`)

@@ -1,0 +1,4 @@
+env: "sub"
+age: 3
+group:
+  name: "${my_group:g3}"

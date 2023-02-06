@@ -28,7 +28,7 @@ type User struct {
 
 func mustNewOptionFromCfgFile() *Option {
 	o := &Option{}
-	conf.MustScanConfFile(o, `http`)
+	conf.MustLoad(o, `http`)
 
 	o.Server.MustNormalize()
 	o.Server.ResetGinGlobalCfg()
@@ -154,7 +154,7 @@ func TestServer(t *testing.T) {
 	server.Run()
 }
 
-//需启动Server
+// 需启动Server
 func TestSession(t *testing.T) {
 	r := require.New(t)
 	client := newClient()
@@ -188,7 +188,7 @@ func TestSession(t *testing.T) {
 	send(`2`)
 }
 
-//需启动Server
+// 需启动Server
 func TestErrHandler(t *testing.T) {
 	r := require.New(t)
 	client := newClient()
@@ -214,7 +214,7 @@ func TestErrHandler(t *testing.T) {
 	send(`nil`, 200)
 }
 
-//需启动Server
+// 需启动Server
 func TestValidateErrHandler(t *testing.T) {
 	r := require.New(t)
 	client := newClient()

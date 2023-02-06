@@ -11,7 +11,7 @@ import (
 
 func newRedisClient() *redis.Client {
 	o := &redis.Options{
-		Addr: "localhost:6379",
+		Addr: "localhost:6389",
 		DB:   3,
 	}
 
@@ -40,6 +40,19 @@ func TestRedisLimiter(t *testing.T) {
 
 	time.Sleep(ttl) //等待key超时后删除
 	r.False(limiter.IsTooFrequent(ctx, key, 2, ttl))
+
+	/*
+	   g:=async.NewWorkerGroup(10)
+
+	   	for i := 0; i < 100000; i++ {
+	   		g.Run(func() {
+	   			time.Sleep(10*time.Millisecond)
+	   			limiter.IsTooFrequent(ctx,key,30,1*time.Second)
+	   		})
+	   	}
+
+	   g.Wait()
+	*/
 }
 
 func TestUtilCA(t *testing.T) {
