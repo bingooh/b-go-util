@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -13,6 +14,18 @@ import (
 	"strings"
 	"time"
 )
+
+func Base64Encode(src []byte) []byte {
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(src)))
+	base64.StdEncoding.Encode(dst, src)
+	return dst
+}
+
+func Base64Decode(src []byte) ([]byte, error) {
+	dst := make([]byte, base64.StdEncoding.DecodedLen(len(src)))
+	n, err := base64.StdEncoding.Decode(dst, src)
+	return dst[:n], err
+}
 
 // 获取plain的md5值，并转换为hex
 func HexMd5(plain string) string {

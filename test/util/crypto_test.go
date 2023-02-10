@@ -90,3 +90,16 @@ func TestAesGcm(t *testing.T) {
 	r.NoError(err)
 	r.Equal(string(plain), rs4)
 }
+
+func TestRsa(t *testing.T) {
+	r := require.New(t)
+
+	data := []byte(`hello`)
+	data2 := []byte(`world`)
+	priKey := util.MustGenerateRsaKey()
+
+	sign, err := util.RsaSignPssSha256(priKey, data)
+	r.NoError(err)
+	r.NoError(util.RsaVerifyPssSha256(&priKey.PublicKey, data, sign))
+	r.Error(util.RsaVerifyPssSha256(&priKey.PublicKey, data2, sign))
+}
