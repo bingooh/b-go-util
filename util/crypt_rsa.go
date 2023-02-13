@@ -10,7 +10,7 @@ import (
 )
 
 func GenerateRsaKey() (*rsa.PrivateKey, error) {
-	return rsa.GenerateKey(rand.Reader, 4096)
+	return rsa.GenerateKey(rand.Reader, 2048)
 }
 
 func MustGenerateRsaKey() *rsa.PrivateKey {
